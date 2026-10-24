@@ -6,6 +6,9 @@ import AcceptInvitePage from './pages/AcceptInvitePage'
 import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
+import ObligationDetailPage from './pages/ObligationDetailPage'
+import ObligationFormPage from './pages/ObligationFormPage'
+import ObligationsPage from './pages/ObligationsPage'
 import SignupPage from './pages/SignupPage'
 import StatusPage from './pages/StatusPage'
 import TeamPage from './pages/TeamPage'
@@ -27,6 +30,10 @@ export default function App() {
           <Route element={<RequireAuth />}>
             <Route element={<AppLayout />}>
               <Route path="/" element={<DashboardPage />} />
+              <Route path="/obligations" element={<ObligationsPage />} />
+              <Route path="/obligations/new" element={<ObligationFormPage />} />
+              <Route path="/obligations/:id" element={<ObligationDetailPage />} />
+              <Route path="/obligations/:id/edit" element={<ObligationFormPage />} />
               <Route path="/team" element={<TeamPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>

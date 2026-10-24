@@ -5,11 +5,12 @@
 /api/obligations/<id>/             GET (members)  detail + upcoming + history + audit trail
                                    PATCH (admins) edit; a schedule change regenerates future due dates only
 /api/obligations/<id>/archive/     POST (admins)  stop tracking; history is kept
+/api/obligations/preview/          POST           {rrule, start_date} → plain-English schedule + next 5 due dates
 /api/obligation-templates/         GET            starter examples for the create form
 /api/dashboard/                    GET            open items grouped by status; ?mine=1 ?category=
 """
 
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Count, Min, Q
@@ -19,10 +20,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from compliance.models import AuditLog, Obligation, Occurrence
-from compliance.recurrence import generate_occurrences
+from compliance.recurrence import due_dates, generate_occurrences
 from compliance.serializers import AuditLogSerializer, ObligationSerializer, OccurrenceSerializer
 from compliance.services import archive_obligation, create_obligation, update_obligation
+from compliance.schedule_text import describe_rrule
 from compliance.status import Status, occurrence_status, today_in
+from compliance.validators import validate_rrule
 from compliance.templates_catalog import TEMPLATES
 from orgs.permissions import IsOrgAdmin, IsOrgMember, current_member
 
@@ -126,6 +129,30 @@ class ObligationArchiveView(APIView):
         obligation = get_object_or_404(Obligation, pk=pk, org=member.org)
         archive_obligation(obligation, actor=member)
         return Response(ObligationSerializer(obligation, context={"org": member.org}).data)
+
+
+class SchedulePreviewView(APIView):
+    """Lets the form show the schedule in words and the next due dates before saving."""
+
+    permission_classes = [IsOrgMember]
+
+    def post(self, request):
+        rule = str(request.data.get("rrule", ""))
+        try:
+            start = date.fromisoformat(str(request.data.get("start_date", "")))
+        except ValueError:
+            return Response({"start_date": ["Enter a valid date."]}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            validate_rrule(rule)
+        except DjangoValidationError as exc:
+            return Response({"rrule": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
+
+        today = today_in(current_member(request).org.timezone)
+        dates = due_dates(rule, start, today, today + timedelta(days=5 * 366))[:5]
+        return Response({
+            "schedule": describe_rrule(rule, start.day, start.month),
+            "next_dates": [d.isoformat() for d in dates],
+        })
 
 
 class TemplateListView(APIView):
