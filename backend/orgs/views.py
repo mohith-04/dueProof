@@ -9,7 +9,7 @@
 /api/auth/invites/<token>/accept/  POST  name + password, joins the org and logs in
 /api/org/                          GET/PATCH  organization settings (PATCH: admins only)
 /api/org/members/                  GET   people in the organization (for owner pickers)
-/api/org/invites/                  GET/POST  pending invites; POST returns the one-time link (admins only)
+/api/org/invites/                  GET/POST  pending invites; POST returns the one-time link path (admins only)
 """
 
 from django.contrib.auth import authenticate, login, logout
@@ -163,6 +163,7 @@ class InviteListView(APIView):
         serializer = InviteCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         invite, token = Invite.create(org=member.org, invited_by=member, **serializer.validated_data)
-        # The raw token exists only in this response (and later the email); the database keeps a hash.
-        invite_url = request.build_absolute_uri(f"/invite/{token}")
-        return Response({**InviteSerializer(invite).data, "invite_url": invite_url}, status=status.HTTP_201_CREATED)
+        # The raw token exists only in this response; the database keeps a hash.
+        # Only the path is returned: the React app adds its own origin, which is correct in
+        # development (Vite on :5173) and production alike, while Django's host may differ.
+        return Response({**InviteSerializer(invite).data, "invite_path": f"/invite/{token}"}, status=status.HTTP_201_CREATED)

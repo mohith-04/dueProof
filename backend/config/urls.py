@@ -9,7 +9,7 @@ anything else → the React app's index.html, so React Router handles the page
 from django.contrib import admin
 from django.urls import include, path, re_path
 
-from config.views import health, spa_index
+from config.views import api_not_found, health, spa_index
 from orgs.urls import auth_urlpatterns, org_urlpatterns
 
 api_urlpatterns = [
@@ -21,5 +21,6 @@ api_urlpatterns = [
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(api_urlpatterns)),
+    re_path(r"^api/", api_not_found),  # anything under /api/ that matched nothing above
     re_path(r"^(?!api/|admin/|static/).*$", spa_index, name="spa"),
 ]

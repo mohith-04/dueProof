@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import connection
-from django.http import FileResponse, HttpResponse
+from django.http import FileResponse, HttpResponse, JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -23,6 +23,11 @@ def health(request):
 
     status_code = 200 if database == "ok" else 503
     return Response({"status": "ok" if status_code == 200 else "degraded", "database": database}, status=status_code)
+
+
+def api_not_found(request, *args, **kwargs):
+    """Unknown /api/ URLs answer in JSON (never Django's HTML debug page), so the React app can handle them."""
+    return JsonResponse({"detail": f"No API endpoint at {request.path}."}, status=404)
 
 
 def spa_index(request):
