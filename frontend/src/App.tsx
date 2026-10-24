@@ -1,31 +1,38 @@
-import { BrowserRouter, Link, Route, Routes } from 'react-router'
+import { BrowserRouter, Route, Routes } from 'react-router'
+import { AuthProvider } from './auth/AuthContext'
+import { RedirectIfLoggedIn, RequireAuth } from './auth/RequireAuth'
+import { AppLayout } from './components/AppLayout'
+import AcceptInvitePage from './pages/AcceptInvitePage'
+import DashboardPage from './pages/DashboardPage'
+import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
+import SignupPage from './pages/SignupPage'
 import StatusPage from './pages/StatusPage'
-
-function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
-        <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <Link to="/" className="text-lg font-semibold tracking-tight">
-            DueProof
-          </Link>
-        </nav>
-      </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
-    </div>
-  )
-}
+import TeamPage from './pages/TeamPage'
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Layout>
+    <AuthProvider>
+      <BrowserRouter>
         <Routes>
-          <Route path="/" element={<StatusPage />} />
-          <Route path="*" element={<NotFoundPage />} />
+          {/* Logged-out pages */}
+          <Route element={<RedirectIfLoggedIn />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+          </Route>
+          <Route path="/invite/:token" element={<AcceptInvitePage />} />
+          <Route path="/status" element={<div className="p-8"><StatusPage /></div>} />
+
+          {/* Everything else needs a logged-in member */}
+          <Route element={<RequireAuth />}>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/team" element={<TeamPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+          </Route>
         </Routes>
-      </Layout>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }

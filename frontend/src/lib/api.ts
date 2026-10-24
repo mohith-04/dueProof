@@ -54,3 +54,35 @@ export async function api<T>(path: string, method: Method = 'GET', body?: unknow
   }
   return data as T
 }
+
+/** Ask Django to set the csrftoken cookie. Called once when the app starts. */
+export function ensureCsrfCookie(): Promise<unknown> {
+  return api('/auth/csrf/')
+}
+
+/**
+ * Turn a Django REST Framework error into messages a form can show.
+ * DRF returns either {"detail": "..."} or {"field": ["msg", ...], "non_field_errors": [...]}.
+ */
+export type FormErrors = { general?: string; fields: Record<string, string> }
+
+export function toFormErrors(error: unknown): FormErrors {
+  if (!(error instanceof ApiError)) {
+    return { general: 'Could not reach the server. Check your connection and try again.', fields: {} }
+  }
+  if (error.status === 429) {
+    return { general: 'Too many attempts. Please wait a minute and try again.', fields: {} }
+  }
+  const body = error.body
+  if (body && typeof body === 'object') {
+    const fields: Record<string, string> = {}
+    let general: string | undefined
+    for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
+      const message = Array.isArray(value) ? String(value[0]) : String(value)
+      if (key === 'detail' || key === 'non_field_errors') general = message
+      else fields[key] = message
+    }
+    return { general, fields }
+  }
+  return { general: `Something went wrong (error ${error.status}).`, fields: {} }
+}
