@@ -1,13 +1,15 @@
 """URL routing.
 
-Everything the React app calls lives under /api/. Django admin stays at /admin/.
-In production, every other path will be served the React app (added in the deploy step).
+/api/...    JSON API used by the React app
+/admin/...  Django admin
+/static/... built assets (served by WhiteNoise)
+anything else → the React app's index.html, so React Router handles the page
 """
 
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 
-from config.views import health
+from config.views import health, spa_index
 
 api_urlpatterns = [
     path("health/", health, name="health"),
@@ -16,4 +18,5 @@ api_urlpatterns = [
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(api_urlpatterns)),
+    re_path(r"^(?!api/|admin/|static/).*$", spa_index, name="spa"),
 ]

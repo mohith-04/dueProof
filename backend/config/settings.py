@@ -24,12 +24,26 @@ env_file = BASE_DIR / ".env"
 if env_file.exists():
     environ.Env.read_env(env_file)
 
+# The built React app (frontend/dist). Django serves its index.html for every
+# non-API page and its assets as static files. Same layout locally and in Docker.
+FRONTEND_DIST = Path(env("FRONTEND_DIST", default=str(BASE_DIR.parent / "frontend" / "dist")))
+
 # --- Core -------------------------------------------------------------------
 
 SECRET_KEY = env("SECRET_KEY")  # required: the app refuses to start without it
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
+
+# Hosting platforms expose the app's public domain as an env var; trust it automatically.
+# Railway: RAILWAY_PUBLIC_DOMAIN (e.g. dueproof-production.up.railway.app). Render: RENDER_EXTERNAL_HOSTNAME.
+PUBLIC_DOMAIN = env("RAILWAY_PUBLIC_DOMAIN", default="") or env("RENDER_EXTERNAL_HOSTNAME", default="")
+if PUBLIC_DOMAIN:
+    ALLOWED_HOSTS.append(PUBLIC_DOMAIN)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{PUBLIC_DOMAIN}")
+# Railway's health checker calls the app with this Host header.
+if env("RAILWAY_PUBLIC_DOMAIN", default=""):
+    ALLOWED_HOSTS.append("healthcheck.railway.app")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -48,6 +62,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # serves static files, incl. the React build
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -83,6 +98,10 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
 }
+# Reuse connections for a minute instead of reconnecting on every request
+# (each new connection to a hosted Postgres costs a network round trip).
+DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -121,3 +140,19 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# Vite builds with base "/static/", so dist/assets/x.js is served at /static/assets/x.js.
+STATICFILES_DIRS = [FRONTEND_DIST] if FRONTEND_DIST.exists() else []
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    # Vite already puts a content hash in every asset name, so plain compression is enough.
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
+
+# --- Production security ----------------------------------------------------
+# The platform terminates HTTPS and forwards requests to the app over HTTP with this header.
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
