@@ -10,9 +10,12 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 
 from config.views import health, spa_index
+from orgs.urls import auth_urlpatterns, org_urlpatterns
 
 api_urlpatterns = [
     path("health/", health, name="health"),
+    path("auth/", include(auth_urlpatterns)),
+    path("org/", include(org_urlpatterns)),
 ]
 
 urlpatterns = [

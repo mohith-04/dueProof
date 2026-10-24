@@ -125,7 +125,14 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    # Login, signup and invite acceptance are rate-limited per client to slow password guessing.
+    "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.ScopedRateThrottle"],
+    "DEFAULT_THROTTLE_RATES": {"auth": "10/minute"},
 }
+
+# Sessions last two weeks; the CSRF cookie must be readable by the React app's JavaScript.
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 14
+CSRF_COOKIE_HTTPONLY = False
 
 # --- Time -------------------------------------------------------------------
 # Timestamps are stored in UTC. "Today" for due dates is computed per
