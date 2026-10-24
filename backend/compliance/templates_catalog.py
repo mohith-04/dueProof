@@ -1,0 +1,68 @@
+"""Starter obligations shown when creating one. They're editable examples, not legal advice:
+teams adjust dates and reminders to their own deadlines."""
+
+TEMPLATES = [
+    {
+        "key": "access-review",
+        "title": "Quarterly access review",
+        "category": "security",
+        "description": "Review who has access to production systems, admin consoles and shared drives. Remove anyone who no longer needs it.",
+        "rrule": "FREQ=MONTHLY;BYMONTH=3,6,9,12;BYMONTHDAY=-1",
+        "remind_days_before": 14,
+        "evidence_required": True,
+    },
+    {
+        "key": "gst-return",
+        "title": "Monthly GST return",
+        "category": "finance",
+        "description": "File the monthly GST return and attach the filing acknowledgement. Check the date against your own filing scheme.",
+        "rrule": "FREQ=MONTHLY;BYMONTHDAY=20",
+        "remind_days_before": 5,
+        "evidence_required": True,
+    },
+    {
+        "key": "tds-payment",
+        "title": "Monthly TDS payment",
+        "category": "finance",
+        "description": "Deposit tax deducted at source for the previous month and attach the challan.",
+        "rrule": "FREQ=MONTHLY;BYMONTHDAY=7",
+        "remind_days_before": 3,
+        "evidence_required": True,
+    },
+    {
+        "key": "backup-restore-test",
+        "title": "Backup restore test",
+        "category": "security",
+        "description": "Restore last night's backup to a test environment and confirm the data is complete. Attach the result.",
+        "rrule": "FREQ=MONTHLY;BYMONTH=1,4,7,10;BYMONTHDAY=15",
+        "remind_days_before": 7,
+        "evidence_required": True,
+    },
+    {
+        "key": "policy-review",
+        "title": "Annual policy review",
+        "category": "hr",
+        "description": "Review and re-approve the employee handbook, IT acceptable-use and leave policies.",
+        "rrule": "FREQ=YEARLY;BYMONTH=4;BYMONTHDAY=1",
+        "remind_days_before": 30,
+        "evidence_required": True,
+    },
+    {
+        "key": "certificate-renewal",
+        "title": "SSL certificate and domain renewal",
+        "category": "security",
+        "description": "Renew the domain and TLS certificate before they expire. Set the start date to the current expiry date.",
+        "rrule": "FREQ=YEARLY",
+        "remind_days_before": 30,
+        "evidence_required": False,
+    },
+    {
+        "key": "fire-drill",
+        "title": "Fire safety drill",
+        "category": "operations",
+        "description": "Run an evacuation drill and record attendance and time taken.",
+        "rrule": "FREQ=MONTHLY;BYMONTH=1,7;BYMONTHDAY=15",
+        "remind_days_before": 14,
+        "evidence_required": True,
+    },
+]

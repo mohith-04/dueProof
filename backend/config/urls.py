@@ -16,6 +16,7 @@ api_urlpatterns = [
     path("health/", health, name="health"),
     path("auth/", include(auth_urlpatterns)),
     path("org/", include(org_urlpatterns)),
+    path("", include("compliance.urls")),
 ]
 
 urlpatterns = [
