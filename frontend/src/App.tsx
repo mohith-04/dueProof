@@ -9,6 +9,7 @@ import NotFoundPage from './pages/NotFoundPage'
 import ObligationDetailPage from './pages/ObligationDetailPage'
 import ObligationFormPage from './pages/ObligationFormPage'
 import ObligationsPage from './pages/ObligationsPage'
+import OccurrencePage from './pages/OccurrencePage'
 import SignupPage from './pages/SignupPage'
 import StatusPage from './pages/StatusPage'
 import TeamPage from './pages/TeamPage'
@@ -34,6 +35,7 @@ export default function App() {
               <Route path="/obligations/new" element={<ObligationFormPage />} />
               <Route path="/obligations/:id" element={<ObligationDetailPage />} />
               <Route path="/obligations/:id/edit" element={<ObligationFormPage />} />
+              <Route path="/occurrences/:id" element={<OccurrencePage />} />
               <Route path="/team" element={<TeamPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>

@@ -122,6 +122,7 @@ const ACTION_TEXT: Record<string, string> = {
   'occurrence.completed': 'marked an item done',
   'occurrence.reopened': 'reopened an item',
   'evidence.uploaded': 'uploaded proof',
+  'evidence.removed': 'removed a proof file',
 }
 
 const FIELD_TEXT: Record<string, string> = {

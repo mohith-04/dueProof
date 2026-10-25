@@ -103,3 +103,22 @@ export type ObligationTemplate = {
   remind_days_before: number
   evidence_required: boolean
 }
+
+export type EvidenceFile = {
+  id: number
+  file_name: string
+  content_type: string
+  size_bytes: number
+  uploaded_by: Person | null
+  uploaded_at: string
+  download_url: string
+}
+
+export type OccurrenceDetail = OccurrenceItem & {
+  obligation_detail: { description: string; schedule: string; archived: boolean }
+  evidence: EvidenceFile[]
+  activity: AuditEntry[]
+  can_work_on: boolean
+  can_reopen: boolean
+  limits: { max_bytes: number; extensions: string[] }
+}

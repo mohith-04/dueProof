@@ -10,7 +10,7 @@ export function OccurrenceList({ items, showOwner = true }: { items: OccurrenceI
       {items.map((item) => (
         <li key={item.id}>
           <Link
-            to={`/obligations/${item.obligation.id}`}
+            to={`/occurrences/${item.id}`}
             className="flex flex-col gap-1 px-4 py-3 hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="min-w-0">
