@@ -4,7 +4,7 @@
 /api/auth/signup/                  POST  create account + organization, logged in as its admin
 /api/auth/login/                   POST  email + password
 /api/auth/logout/                  POST
-/api/auth/me/                      GET   current member + organization (403 when logged out)
+/api/auth/me/                      GET   current member + organization (null when logged out)
 /api/auth/invites/<token>/         GET   check an invite link before showing the join form
 /api/auth/invites/<token>/accept/  POST  name + password, joins the org and logs in
 /api/org/                          GET/PATCH  organization settings (PATCH: admins only)
@@ -20,6 +20,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from compliance.services import record_audit
 from orgs.models import Invite
 from orgs.permissions import IsOrgAdmin, IsOrgMember, current_member
 from orgs.serializers import (
@@ -92,10 +93,16 @@ class LogoutView(APIView):
 
 
 class MeView(APIView):
-    permission_classes = [IsOrgMember]
+    """The logged-in member and organization, or null when nobody is logged in.
+
+    Answering 200 + null (instead of 403) keeps the browser console clean on the login page.
+    """
+
+    permission_classes = [AllowAny]
 
     def get(self, request):
-        return Response(me_payload(current_member(request)))
+        member = current_member(request)
+        return Response(me_payload(member) if member else None)
 
 
 class InviteDetailView(APIView):
@@ -137,9 +144,13 @@ class OrganizationView(APIView):
         member = current_member(request)
         if not member.is_admin:
             return Response({"detail": IsOrgAdmin.message}, status=status.HTTP_403_FORBIDDEN)
+        before = OrganizationSerializer(member.org).data
         serializer = OrganizationSerializer(member.org, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        if serializer.data != before:
+            record_audit(org=member.org, actor=member, action="org.updated", entity_type="organization",
+                         entity_id=member.org.id, before=dict(before), after=dict(serializer.data))
         return Response(serializer.data)
 
 

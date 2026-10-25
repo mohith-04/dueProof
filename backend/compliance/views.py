@@ -207,6 +207,16 @@ class DashboardView(APIView):
             )
             groups[item_status].append(occurrence)
 
+        # Upcoming shows only the next due date of each obligation, so a weekly task
+        # doesn't fill the list with six copies of itself.
+        seen: set[int] = set()
+        next_per_obligation = []
+        for occurrence in groups[Status.UPCOMING]:
+            if occurrence.obligation_id not in seen:
+                seen.add(occurrence.obligation_id)
+                next_per_obligation.append(occurrence)
+        groups[Status.UPCOMING] = next_per_obligation
+
         context = {"today": today}
         serialize = lambda items: OccurrenceSerializer(items, many=True, context=context).data  # noqa: E731
         return Response({

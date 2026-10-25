@@ -8,9 +8,16 @@ User = get_user_model()
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
+    timezone = serializers.CharField(max_length=64, validators=[validate_timezone])
+
     class Meta:
         model = Organization
         fields = ["id", "name", "timezone"]
+
+    def validate_name(self, value):
+        if not value.strip():
+            raise serializers.ValidationError("Enter a name.")
+        return value.strip()
 
 
 class MemberSerializer(serializers.ModelSerializer):

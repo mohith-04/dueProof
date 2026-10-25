@@ -35,6 +35,11 @@ DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
 
+# In development the React app runs on Vite (:5173) and proxies /api to Django,
+# so Django must trust that origin for CSRF checks. Production needs no extra origin.
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS += ["http://localhost:5173", "http://127.0.0.1:5173"]
+
 # Hosting platforms expose the app's public domain as an env var; trust it automatically.
 # Railway: RAILWAY_PUBLIC_DOMAIN (e.g. dueproof-production.up.railway.app). Render: RENDER_EXTERNAL_HOSTNAME.
 PUBLIC_DOMAIN = env("RAILWAY_PUBLIC_DOMAIN", default="") or env("RENDER_EXTERNAL_HOSTNAME", default="")

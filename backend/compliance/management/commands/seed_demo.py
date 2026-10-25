@@ -168,7 +168,7 @@ class Command(BaseCommand):
         moment = datetime.combine(done_on, time(11 + occurrence.id % 6, 15 + occurrence.id % 40), tzinfo=tz)
         if proof_required:
             slug = title.lower().replace(" ", "-")
-            name = f"{slug}-{occurrence.due_date:%Y-%m}.pdf"
+            name = f"{slug}-{occurrence.due_date:%Y-%m-%d}.pdf"
             pdf = tiny_pdf(title, [
                 f"Period due: {occurrence.due_date:%d %b %Y}",
                 f"Completed by: {owner.display_name} on {done_on:%d %b %Y}",
