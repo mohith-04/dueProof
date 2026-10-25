@@ -5,6 +5,7 @@ import { AuthShell } from '../components/AuthShell'
 import { Alert, Button, Field } from '../components/ui'
 import { api, toFormErrors, type FormErrors } from '../lib/api'
 import type { Me } from '../lib/types'
+import { useTitle } from '../lib/useTitle'
 
 /** Only allow redirects to our own pages after login (never to another site). */
 function safeNext(next: string | null): string {
@@ -12,6 +13,7 @@ function safeNext(next: string | null): string {
 }
 
 export default function LoginPage() {
+  useTitle('Log in')
   const { setMe } = useAuth()
   const navigate = useNavigate()
   const [params] = useSearchParams()

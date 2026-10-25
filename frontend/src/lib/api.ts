@@ -63,8 +63,14 @@ export async function api<T>(path: string, method: Method = 'GET', body?: unknow
   if (!response.ok) {
     throw new ApiError(response.status, data)
   }
+  if (method !== 'GET') {
+    // Lets always-visible widgets (the notification bell) refresh after any change.
+    window.dispatchEvent(new Event(DATA_CHANGED_EVENT))
+  }
   return data as T
 }
+
+export const DATA_CHANGED_EVENT = 'dueproof:data-changed'
 
 /** The request never got an answer (offline, server down, DNS...). */
 export class NetworkError extends Error {
@@ -91,6 +97,10 @@ export function toFormErrors(error: unknown): FormErrors {
   if (!(error instanceof ApiError)) {
     console.error(error)
     return { general: 'Something went wrong in the app. Refresh the page and try again.', fields: {} }
+  }
+  if (error.status === 403 && error.body === null) {
+    // Django's CSRF check answers with an HTML page, not JSON.
+    return { general: 'Security check failed. Refresh the page and try again.', fields: {} }
   }
   if (error.status === 429) {
     return { general: 'Too many attempts. Please wait a minute and try again.', fields: {} }

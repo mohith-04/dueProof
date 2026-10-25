@@ -6,10 +6,12 @@ import { Alert, Card, Spinner } from '../components/ui'
 import { api } from '../lib/api'
 import { CATEGORIES, formatDate } from '../lib/format'
 import type { Dashboard, OccurrenceItem } from '../lib/types'
+import { useTitle } from '../lib/useTitle'
 
 type Filters = { mine: boolean; category: string }
 
 export default function DashboardPage() {
+  useTitle('Dashboard')
   const { me } = useAuth()
   const isAdmin = me?.member.role === 'admin'
   const [filters, setFilters] = useState<Filters>({ mine: false, category: '' })
@@ -63,7 +65,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <CountCard label="Overdue" value={data.counts.overdue} tone="red" />
             <CountCard label="Due soon" value={data.counts.due_soon} tone="amber" />
-            <CountCard label="Upcoming (45 days)" value={data.counts.upcoming} tone="slate" />
+            <CountCard label="Coming up (45 days)" value={data.counts.upcoming} tone="slate" />
             <CountCard label="Done (30 days)" value={data.counts.completed_last_30_days} tone="emerald" />
           </div>
 
@@ -85,7 +87,7 @@ export default function DashboardPage() {
             <>
               <Section title="Overdue" items={data.overdue} empty="Nothing overdue. Nice." tone="red" />
               <Section title="Due soon" items={data.due_soon} empty="Nothing inside its reminder window." tone="amber" />
-              <Section title="Upcoming" items={data.upcoming} empty="Nothing due in the next 45 days." />
+              <Section title="Upcoming" note="next due date of each obligation" items={data.upcoming} empty="Nothing due in the next 45 days." />
               {data.recently_completed.length > 0 && (
                 <Section title="Recently completed" items={data.recently_completed} empty="" />
               )}
@@ -107,12 +109,12 @@ function CountCard({ label, value, tone }: { label: string; value: number; tone:
   )
 }
 
-function Section({ title, items, empty, tone }: { title: string; items: OccurrenceItem[]; empty: string; tone?: 'red' | 'amber' }) {
+function Section({ title, note, items, empty, tone }: { title: string; note?: string; items: OccurrenceItem[]; empty: string; tone?: 'red' | 'amber' }) {
   const accent = tone === 'red' && items.length ? 'border-l-4 border-l-red-500' : tone === 'amber' && items.length ? 'border-l-4 border-l-amber-400' : ''
   return (
     <Card className={`overflow-hidden ${accent}`}>
       <h2 className="border-b border-slate-200 px-4 py-3 text-sm font-semibold">
-        {title} <span className="font-normal text-slate-500">({items.length})</span>
+        {title} <span className="font-normal text-slate-500">({items.length}){note && ` · ${note}`}</span>
       </h2>
       {items.length ? <OccurrenceList items={items} /> : <p className="px-4 py-6 text-sm text-slate-500">{empty}</p>}
     </Card>

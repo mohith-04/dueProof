@@ -5,6 +5,7 @@ import { Alert, Button, Card, FullPageSpinner } from '../components/ui'
 import { api, ApiError, toFormErrors } from '../lib/api'
 import { dueLabel, formatBytes, formatDate, formatDateTime } from '../lib/format'
 import type { AuditEntry, OccurrenceDetail } from '../lib/types'
+import { useTitle } from '../lib/useTitle'
 
 /** One due item: what to do, the proof attached, and marking it done. */
 export default function OccurrencePage() {
@@ -15,6 +16,7 @@ export default function OccurrencePage() {
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState<'upload' | 'complete' | 'reopen' | number | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
+  useTitle(item ? `${item.obligation.title} · due ${item.due_date}` : 'Due item')
 
   const load = useCallback(() => {
     api<OccurrenceDetail>(`/occurrences/${id}/`)
@@ -85,7 +87,9 @@ export default function OccurrencePage() {
               {' '}· Owner {item.owner.name}
             </p>
           </div>
-          <StatusBadge status={item.status} />
+          <div className="shrink-0 self-start">
+            <StatusBadge status={item.status} />
+          </div>
         </div>
       </div>
 

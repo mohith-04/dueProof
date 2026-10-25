@@ -5,6 +5,7 @@ import { AuthShell } from '../components/AuthShell'
 import { Alert, Button, Field, FullPageSpinner } from '../components/ui'
 import { api, toFormErrors, type FormErrors } from '../lib/api'
 import type { Me, Role } from '../lib/types'
+import { useTitle } from '../lib/useTitle'
 
 type InviteInfo = { org_name: string; email: string; role: Role }
 
@@ -18,6 +19,7 @@ export default function AcceptInvitePage() {
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState<FormErrors>({ fields: {} })
   const [submitting, setSubmitting] = useState(false)
+  useTitle(invite ? `Join ${invite.org_name}` : 'Accept invite')
 
   useEffect(() => {
     api<InviteInfo>(`/auth/invites/${encodeURIComponent(token)}/`)

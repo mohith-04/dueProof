@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { api } from '../lib/api'
+import { api, DATA_CHANGED_EVENT } from '../lib/api'
 import { formatDateTime } from '../lib/format'
 import type { NotificationFeed, NotificationItem } from '../lib/notifications'
 
@@ -29,7 +29,13 @@ export function NotificationBell() {
 
   useEffect(() => {
     const timer = setInterval(refresh, REFRESH_MS)
-    return () => clearInterval(timer)
+    // Refresh right after the user changes something, e.g. marks an item done.
+    const onChange = () => setTimeout(refresh, 0)
+    window.addEventListener(DATA_CHANGED_EVENT, onChange)
+    return () => {
+      clearInterval(timer)
+      window.removeEventListener(DATA_CHANGED_EVENT, onChange)
+    }
   }, [refresh])
 
   // Close on outside click or Escape.

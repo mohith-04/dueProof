@@ -6,6 +6,7 @@ import { Alert, Badge, Button, Card, FullPageSpinner } from '../components/ui'
 import { api, ApiError, toFormErrors } from '../lib/api'
 import { formatDate, formatDateTime } from '../lib/format'
 import type { AuditEntry, ObligationDetail } from '../lib/types'
+import { useTitle } from '../lib/useTitle'
 
 export default function ObligationDetailPage() {
   const { id } = useParams()
@@ -14,6 +15,7 @@ export default function ObligationDetailPage() {
   const [obligation, setObligation] = useState<ObligationDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [archiving, setArchiving] = useState(false)
+  useTitle(obligation?.title ?? 'Obligation')
 
   const load = useCallback(() => {
     api<ObligationDetail>(`/obligations/${id}/`)

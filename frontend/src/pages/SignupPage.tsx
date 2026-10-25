@@ -5,12 +5,14 @@ import { AuthShell } from '../components/AuthShell'
 import { Alert, Button, Field, SelectField } from '../components/ui'
 import { api, toFormErrors, type FormErrors } from '../lib/api'
 import type { Me } from '../lib/types'
+import { useTitle } from '../lib/useTitle'
 
 function browserTimezone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata'
 }
 
 export default function SignupPage() {
+  useTitle('Create organization')
   const { setMe } = useAuth()
   const navigate = useNavigate()
   const timezones = useMemo(() => Intl.supportedValuesOf('timeZone'), [])

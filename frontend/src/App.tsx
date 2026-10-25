@@ -11,6 +11,7 @@ import ObligationFormPage from './pages/ObligationFormPage'
 import ObligationsPage from './pages/ObligationsPage'
 import OccurrencePage from './pages/OccurrencePage'
 import ReportsPage from './pages/ReportsPage'
+import SettingsPage from './pages/SettingsPage'
 import SignupPage from './pages/SignupPage'
 import StatusPage from './pages/StatusPage'
 import TeamPage from './pages/TeamPage'
@@ -39,6 +40,7 @@ export default function App() {
               <Route path="/occurrences/:id" element={<OccurrencePage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/team" element={<TeamPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Route>

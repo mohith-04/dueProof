@@ -3,9 +3,11 @@ import { useAuth } from '../auth/useAuth'
 import { Alert, Badge, Button, Card, Field, SelectField, Spinner } from '../components/ui'
 import { api, toFormErrors, type FormErrors } from '../lib/api'
 import type { Invite, Member, Role } from '../lib/types'
+import { useTitle } from '../lib/useTitle'
 
 /** Members of the org; admins can invite people by sharing a one-time link (no email service needed). */
 export default function TeamPage() {
+  useTitle('Team')
   const { me } = useAuth()
   const isAdmin = me?.member.role === 'admin'
   const [members, setMembers] = useState<Member[] | null>(null)

@@ -6,6 +6,7 @@ import { api, toFormErrors, type FormErrors } from '../lib/api'
 import { CATEGORIES } from '../lib/format'
 import { DEFAULT_SCHEDULE, fromRrule, toRrule, type ScheduleChoice } from '../lib/schedule'
 import type { Category, Member, Obligation, ObligationTemplate } from '../lib/types'
+import { useTitle } from '../lib/useTitle'
 
 type FormState = {
   title: string
@@ -32,6 +33,7 @@ const EMPTY: FormState = {
 export default function ObligationFormPage() {
   const { id } = useParams()
   const isEdit = Boolean(id)
+  useTitle(isEdit ? 'Edit obligation' : 'New obligation')
   const navigate = useNavigate()
   const [form, setForm] = useState<FormState>(EMPTY)
   const [members, setMembers] = useState<Member[]>([])

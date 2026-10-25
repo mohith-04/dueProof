@@ -5,8 +5,10 @@ import { Alert, Badge, Card, Spinner } from '../components/ui'
 import { api } from '../lib/api'
 import { CATEGORIES, formatDate } from '../lib/format'
 import type { Obligation } from '../lib/types'
+import { useTitle } from '../lib/useTitle'
 
 export default function ObligationsPage() {
+  useTitle('Obligations')
   const { me } = useAuth()
   const isAdmin = me?.member.role === 'admin'
   const [archived, setArchived] = useState(false)

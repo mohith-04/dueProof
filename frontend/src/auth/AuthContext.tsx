@@ -5,7 +5,7 @@ import { AuthContext } from './context'
 
 /**
  * Knows who is logged in. On first load it gets the CSRF cookie, then asks
- * /api/auth/me/: 200 means a session exists, 403 means logged out.
+ * /api/auth/me/: it returns the member, or null when nobody is logged in.
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [me, setMe] = useState<Me | null>(null)
@@ -13,7 +13,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     ensureCsrfCookie()
-      .then(() => api<Me>('/auth/me/'))
+      .then(() => api<Me | null>('/auth/me/'))
       .then(setMe)
       .catch((error: unknown) => {
         if (!(error instanceof ApiError && error.status === 403)) console.error(error)

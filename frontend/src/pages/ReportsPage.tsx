@@ -5,6 +5,7 @@ import { api, toFormErrors } from '../lib/api'
 import { CATEGORIES, formatDate, formatDateTime } from '../lib/format'
 import { REPORT_STATUS_TONE, type Report } from '../lib/reports'
 import type { Member } from '../lib/types'
+import { useTitle } from '../lib/useTitle'
 
 type Filters = { from: string; to: string; category: string; owner: string; status: string }
 
@@ -24,6 +25,7 @@ const inputClass = 'mt-1 block w-full rounded-lg border border-slate-300 bg-whit
 
 /** "Prove you did X": every due item in a period, with completion and proof, exportable to CSV. */
 export default function ReportsPage() {
+  useTitle('Reports')
   const [filters, setFilters] = useState<Filters>({ from: isoDaysAgo(90), to: isoDaysAgo(0), category: '', owner: '', status: '' })
   const [members, setMembers] = useState<Member[]>([])
   const [report, setReport] = useState<Report | null>(null)

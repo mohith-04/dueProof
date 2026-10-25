@@ -11,10 +11,12 @@ export default defineConfig(({ command }) => ({
 
   // Development: React runs on :5173 and forwards every /api request to Django
   // on :8000, so the browser sees one origin, exactly like production.
+  // 127.0.0.1, not "localhost": Node may resolve localhost to IPv6 (::1), while
+  // Django's runserver listens on IPv4 only.
   server: {
     port: 5173,
     proxy: {
-      '/api': 'http://localhost:8000',
+      '/api': 'http://127.0.0.1:8000',
     },
   },
 }))
