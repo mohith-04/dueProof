@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth'
+import { NotificationBell } from './NotificationBell'
 import { Badge } from './ui'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -35,6 +36,7 @@ export function AppLayout() {
             </NavLink>
           </nav>
           <div className="flex items-center gap-3 text-sm">
+            <NotificationBell />
             <div className="text-right leading-tight">
               <p className="font-medium text-slate-900">{me.member.name}</p>
               <p className="text-xs text-slate-500">{me.org.name}</p>
