@@ -31,5 +31,7 @@ RUN useradd --create-home appuser && mkdir -p /app/backend/media && chown appuse
 USER appuser
 
 # Railway (or Render) provides $PORT. Migrations run on each start so the schema always matches the code.
+# With SEED_DEMO=1, the demo organization is created on first start (skipped when it already exists).
 CMD python manage.py migrate --noinput && \
+    if [ "$SEED_DEMO" = "1" ]; then python manage.py seed_demo; fi && \
     gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 60 --access-logfile -

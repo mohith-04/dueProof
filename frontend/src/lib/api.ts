@@ -39,20 +39,38 @@ export async function api<T>(path: string, method: Method = 'GET', body?: unknow
     if (csrfToken) headers['X-CSRFToken'] = csrfToken
   }
 
-  const response = await fetch(`/api${path}`, {
-    method,
-    headers,
-    credentials: 'same-origin',
-    body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body),
-  })
+  let response: Response
+  try {
+    response = await fetch(`/api${path}`, {
+      method,
+      headers,
+      credentials: 'same-origin',
+      body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body),
+    })
+  } catch {
+    throw new NetworkError()
+  }
 
   const text = await response.text()
-  const data: unknown = text ? JSON.parse(text) : null
+  let data: unknown = null
+  try {
+    data = text ? JSON.parse(text) : null
+  } catch {
+    // Not JSON: a server crash page or a proxy error. Keep the status, drop the HTML.
+    data = null
+  }
 
   if (!response.ok) {
     throw new ApiError(response.status, data)
   }
   return data as T
+}
+
+/** The request never got an answer (offline, server down, DNS...). */
+export class NetworkError extends Error {
+  constructor() {
+    super('Network request failed')
+  }
 }
 
 /** Ask Django to set the csrftoken cookie. Called once when the app starts. */
@@ -67,11 +85,21 @@ export function ensureCsrfCookie(): Promise<unknown> {
 export type FormErrors = { general?: string; fields: Record<string, string> }
 
 export function toFormErrors(error: unknown): FormErrors {
-  if (!(error instanceof ApiError)) {
+  if (error instanceof NetworkError) {
     return { general: 'Could not reach the server. Check your connection and try again.', fields: {} }
+  }
+  if (!(error instanceof ApiError)) {
+    console.error(error)
+    return { general: 'Something went wrong in the app. Refresh the page and try again.', fields: {} }
   }
   if (error.status === 429) {
     return { general: 'Too many attempts. Please wait a minute and try again.', fields: {} }
+  }
+  if (error.status === 502 || error.status === 503 || error.status === 504) {
+    return { general: 'The server is starting up or unavailable. Wait a moment and try again.', fields: {} }
+  }
+  if (error.status >= 500) {
+    return { general: `The server hit an error (${error.status}). Try again; if it keeps happening, check the server logs.`, fields: {} }
   }
   const body = error.body
   if (body && typeof body === 'object') {
