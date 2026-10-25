@@ -3,7 +3,7 @@ import { AuthShell } from '../components/AuthShell'
 import { Alert, Button, FullPageSpinner } from '../components/ui'
 import { useAuth } from './useAuth'
 
-function ServerUnavailable() {
+export function ServerUnavailable() {
   const { retry } = useAuth()
   return (
     <AuthShell title="Can’t reach DueProof right now">

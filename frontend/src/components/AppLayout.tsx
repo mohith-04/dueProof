@@ -16,7 +16,7 @@ const LINKS = [
 ]
 
 /** Top bar + page area for everything behind login. On phones the links scroll sideways. */
-export function AppLayout() {
+export function AppLayout({ children }: { children?: React.ReactNode }) {
   const { me, logout } = useAuth()
   const navigate = useNavigate()
   const [loggingOut, setLoggingOut] = useState(false)
@@ -25,7 +25,7 @@ export function AppLayout() {
   async function handleLogout() {
     setLoggingOut(true)
     await logout().catch(() => undefined)
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }
 
   return (
@@ -56,7 +56,7 @@ export function AppLayout() {
         </nav>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
-        <Outlet />
+        {children ?? <Outlet />}
       </main>
     </div>
   )

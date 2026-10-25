@@ -1,9 +1,9 @@
 import { BrowserRouter, Route, Routes } from 'react-router'
 import { AuthProvider } from './auth/AuthContext'
 import { RedirectIfLoggedIn, RequireAuth } from './auth/RequireAuth'
+import { HomeRoute } from './auth/HomeRoute'
 import { AppLayout } from './components/AppLayout'
 import AcceptInvitePage from './pages/AcceptInvitePage'
-import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ObligationDetailPage from './pages/ObligationDetailPage'
@@ -29,10 +29,12 @@ export default function App() {
           <Route path="/invite/:token" element={<AcceptInvitePage />} />
           <Route path="/status" element={<div className="p-8"><StatusPage /></div>} />
 
+          {/* Home: the landing page for visitors, the dashboard once logged in */}
+          <Route path="/" element={<HomeRoute />} />
+
           {/* Everything else needs a logged-in member */}
           <Route element={<RequireAuth />}>
             <Route element={<AppLayout />}>
-              <Route path="/" element={<DashboardPage />} />
               <Route path="/obligations" element={<ObligationsPage />} />
               <Route path="/obligations/new" element={<ObligationFormPage />} />
               <Route path="/obligations/:id" element={<ObligationDetailPage />} />

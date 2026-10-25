@@ -63,8 +63,9 @@ export async function api<T>(path: string, method: Method = 'GET', body?: unknow
   if (!response.ok) {
     throw new ApiError(response.status, data)
   }
-  if (method !== 'GET') {
-    // Lets always-visible widgets (the notification bell) refresh after any change.
+  if (method !== 'GET' && !path.startsWith('/auth/')) {
+    // Lets always-visible widgets (the notification bell) refresh after a data change.
+    // Login/logout are excluded: right after logging out, a refresh would be refused.
     window.dispatchEvent(new Event(DATA_CHANGED_EVENT))
   }
   return data as T
