@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
-from compliance.models import AuditLog, Obligation, Occurrence
+from compliance.models import AuditLog, Evidence, Obligation, Occurrence
 from compliance.schedule_text import describe_rrule
 from compliance.status import occurrence_status
 from orgs.models import Member
@@ -111,3 +111,15 @@ class AuditLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditLog
         fields = ["id", "action", "entity_type", "entity_id", "actor", "before", "after", "created_at"]
+
+
+class EvidenceSerializer(serializers.ModelSerializer):
+    uploaded_by = PersonSerializer(read_only=True)
+    download_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Evidence
+        fields = ["id", "file_name", "content_type", "size_bytes", "uploaded_by", "uploaded_at", "download_url"]
+
+    def get_download_url(self, evidence) -> str:
+        return f"/api/evidence/{evidence.id}/download/"

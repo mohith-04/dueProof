@@ -25,7 +25,9 @@ COPY --from=frontend /app/frontend/dist /app/frontend/dist
 # collectstatic only needs a placeholder key; the real one is set at runtime.
 RUN SECRET_KEY=build-only python manage.py collectstatic --noinput
 
-RUN useradd --create-home appuser
+# The app runs as a non-root user; it needs one writable folder for uploaded evidence.
+# (With a Railway volume, set MEDIA_ROOT to the volume path instead; see the README.)
+RUN useradd --create-home appuser && mkdir -p /app/backend/media && chown appuser /app/backend/media
 USER appuser
 
 # Railway (or Render) provides $PORT. Migrations run on each start so the schema always matches the code.

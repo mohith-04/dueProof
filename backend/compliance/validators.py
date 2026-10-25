@@ -53,3 +53,20 @@ def validate_rrule(value: str) -> None:
 
     if not schedule.between(start, start.replace(year=start.year + 5), inc=True):
         raise ValidationError("This rule never produces a due date.")
+
+
+def validate_evidence_file(uploaded_file) -> None:
+    """Allow common proof formats up to the size limit. Files are always downloaded as
+    attachments (never displayed inline), so a disguised HTML file can't run in the app."""
+    from django.conf import settings
+
+    if uploaded_file is None:
+        raise ValidationError("Choose a file to upload.")
+    extension = uploaded_file.name.rsplit(".", 1)[-1].lower() if "." in uploaded_file.name else ""
+    if extension not in settings.EVIDENCE_EXTENSIONS:
+        allowed = ", ".join(sorted(settings.EVIDENCE_EXTENSIONS))
+        raise ValidationError(f"“.{extension or '?'}” files aren't accepted. Use one of: {allowed}.")
+    if uploaded_file.size == 0:
+        raise ValidationError("This file is empty.")
+    if uploaded_file.size > settings.MAX_EVIDENCE_BYTES:
+        raise ValidationError(f"Files can be at most {settings.MAX_EVIDENCE_BYTES // (1024 * 1024)} MB.")

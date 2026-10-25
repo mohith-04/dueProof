@@ -149,8 +149,38 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 # Vite builds with base "/static/", so dist/assets/x.js is served at /static/assets/x.js.
 STATICFILES_DIRS = [FRONTEND_DIST] if FRONTEND_DIST.exists() else []
+# --- Uploaded evidence files -------------------------------------------------
+# Evidence is private: it is never served from a public URL, only streamed by
+# /api/evidence/<id>/download/ after a permission check.
+#
+# Default: files on disk under MEDIA_ROOT. On Railway, attach a volume and set
+# MEDIA_ROOT to a folder on it (e.g. /data/media) so files survive redeploys.
+# Optional: set S3_BUCKET (+ keys) to use any S3-compatible bucket instead,
+# e.g. Supabase Storage's S3 endpoint.
+
+MEDIA_ROOT = Path(env("MEDIA_ROOT", default=str(BASE_DIR / "media")))
+MAX_EVIDENCE_BYTES = 10 * 1024 * 1024  # 10 MB per file
+EVIDENCE_EXTENSIONS = {"pdf", "png", "jpg", "jpeg", "csv", "txt", "xlsx", "docx"}
+
+if env("S3_BUCKET", default=""):
+    default_storage = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "bucket_name": env("S3_BUCKET"),
+            "endpoint_url": env("S3_ENDPOINT_URL", default=None),
+            "region_name": env("S3_REGION", default=None),
+            "access_key": env("S3_ACCESS_KEY_ID"),
+            "secret_key": env("S3_SECRET_ACCESS_KEY"),
+            "default_acl": None,
+            "querystring_auth": True,
+            "file_overwrite": False,
+        },
+    }
+else:
+    default_storage = {"BACKEND": "django.core.files.storage.FileSystemStorage", "OPTIONS": {"location": MEDIA_ROOT}}
+
 STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "default": default_storage,
     # Vite already puts a content hash in every asset name, so plain compression is enough.
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
 }

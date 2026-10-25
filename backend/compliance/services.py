@@ -11,7 +11,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
-from compliance.models import AuditLog, Obligation
+from compliance.models import AuditLog, Evidence, Obligation, Occurrence
 from compliance.recurrence import generate_occurrences, regenerate_future
 from compliance.status import today_in
 from orgs.models import Member
@@ -122,3 +122,96 @@ def archive_obligation(obligation: Obligation, *, actor: Member, today: date | N
         entity_type="obligation", entity_id=obligation.id, before=before, after=snapshot(obligation),
     )
     return obligation
+
+
+# --- Evidence and completion ---------------------------------------------------
+# The owner of an obligation (or any admin) works on its occurrences. Proof can be
+# added or removed only while an item is open; once done, the record is frozen
+# until an admin reopens it.
+
+class NotAllowed(Exception):
+    """The member may not perform this action on this item."""
+
+
+def can_work_on(member: Member, occurrence: Occurrence) -> bool:
+    return member.is_admin or occurrence.obligation.owner_id == member.id
+
+
+def _require_open_and_allowed(member: Member, occurrence: Occurrence) -> None:
+    if not can_work_on(member, occurrence):
+        raise NotAllowed("Only the owner of this obligation or an admin can do this.")
+    if occurrence.is_completed:
+        raise ValidationError("This item is already done. An admin can reopen it to make changes.")
+
+
+@transaction.atomic
+def add_evidence(occurrence: Occurrence, *, actor: Member, uploaded_file) -> Evidence:
+    _require_open_and_allowed(actor, occurrence)
+    evidence = Evidence(
+        occurrence=occurrence,
+        file_name=uploaded_file.name[:255],
+        content_type=(uploaded_file.content_type or "application/octet-stream")[:100],
+        size_bytes=uploaded_file.size,
+        uploaded_by=actor,
+    )
+    evidence.file.save(uploaded_file.name, uploaded_file, save=False)
+    evidence.save()
+    record_audit(
+        org=occurrence.obligation.org, actor=actor, action="evidence.uploaded", entity_type="occurrence",
+        entity_id=occurrence.id, after={"file_name": evidence.file_name, "size_bytes": evidence.size_bytes},
+    )
+    return evidence
+
+
+@transaction.atomic
+def remove_evidence(evidence: Evidence, *, actor: Member) -> None:
+    occurrence = evidence.occurrence
+    _require_open_and_allowed(actor, occurrence)
+    record_audit(
+        org=occurrence.obligation.org, actor=actor, action="evidence.removed", entity_type="occurrence",
+        entity_id=occurrence.id, before={"file_name": evidence.file_name},
+    )
+    stored_name = evidence.file.name
+    evidence.delete()
+    # Delete the stored file only after the database change is committed.
+    transaction.on_commit(lambda: evidence.file.storage.delete(stored_name))
+
+
+@transaction.atomic
+def complete_occurrence(occurrence: Occurrence, *, actor: Member, note: str = "") -> Occurrence:
+    occurrence = Occurrence.objects.select_for_update().select_related("obligation__org").get(pk=occurrence.pk)
+    _require_open_and_allowed(actor, occurrence)
+    if occurrence.obligation.evidence_required and not occurrence.evidence.exists():
+        raise ValidationError("Attach proof before marking this done. This obligation requires evidence.")
+
+    occurrence.completed_at = timezone.now()
+    occurrence.completed_by = actor
+    occurrence.completion_note = note.strip()
+    occurrence.save(update_fields=["completed_at", "completed_by", "completion_note"])
+    record_audit(
+        org=occurrence.obligation.org, actor=actor, action="occurrence.completed", entity_type="occurrence",
+        entity_id=occurrence.id,
+        after={"due_date": occurrence.due_date.isoformat(), "note": occurrence.completion_note,
+               "evidence": list(occurrence.evidence.values_list("file_name", flat=True))},
+    )
+    return occurrence
+
+
+@transaction.atomic
+def reopen_occurrence(occurrence: Occurrence, *, actor: Member, reason: str = "") -> Occurrence:
+    if not actor.is_admin:
+        raise NotAllowed("Only admins can reopen a completed item.")
+    occurrence = Occurrence.objects.select_for_update().select_related("obligation__org").get(pk=occurrence.pk)
+    if not occurrence.is_completed:
+        return occurrence
+    before = {"completed_at": occurrence.completed_at.isoformat(), "completed_by_id": occurrence.completed_by_id,
+              "note": occurrence.completion_note}
+    occurrence.completed_at = None
+    occurrence.completed_by = None
+    occurrence.completion_note = ""
+    occurrence.save(update_fields=["completed_at", "completed_by", "completion_note"])
+    record_audit(
+        org=occurrence.obligation.org, actor=actor, action="occurrence.reopened", entity_type="occurrence",
+        entity_id=occurrence.id, before=before, after={"reason": reason.strip()},
+    )
+    return occurrence
