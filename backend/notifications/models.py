@@ -5,10 +5,11 @@ from orgs.models import Member
 
 
 class Notification(models.Model):
-    """One email we sent (or tried to send) about an occurrence.
+    """An in-app alert about a due item, shown under the bell in the top bar.
 
-    The unique constraint is what makes the daily job idempotent: the row is
-    created before sending, so a second run finds it and doesn't email again.
+    No email or messaging service: notifications are created when anyone in the
+    organization opens the app (see notifications/services.py). The unique
+    constraint means re-running that check never creates a duplicate.
     """
 
     class Kind(models.TextChoices):
@@ -18,18 +19,17 @@ class Notification(models.Model):
     occurrence = models.ForeignKey(Occurrence, on_delete=models.CASCADE, related_name="notifications")
     kind = models.CharField(max_length=20, choices=Kind.choices)
     recipient = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="notifications")
-    recipient_email = models.EmailField()  # the address used at send time
-    sent_at = models.DateTimeField(null=True, blank=True)
-    error = models.TextField(blank=True)  # last failure; the next run retries unsent rows
+    read_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["-created_at"]
+        ordering = ["-created_at", "-id"]
         constraints = [
             models.UniqueConstraint(
                 fields=["occurrence", "kind", "recipient"], name="one_notification_per_occurrence_kind_recipient"
             ),
         ]
+        indexes = [models.Index(fields=["recipient", "read_at"])]
 
     def __str__(self) -> str:
-        return f"{self.get_kind_display()} → {self.recipient_email}"
+        return f"{self.get_kind_display()} → {self.recipient}"
