@@ -5,7 +5,7 @@ A small web app for teams that have recurring compliance work — tax filings, a
 Each task has a schedule, an owner, and can't be marked done without attaching proof. Everything ends up in an audit-ready report.
 
 - **Live app:** [dueproof-production.up.railway.app](https://dueproof-production.up.railway.app) — hit "Explore the demo" to jump straight in
-- **Demo video:** [Watch demo walkthrough](https://drive.google.com/file/d/1-vHcfyj6sQNIqssp7pwQGJ5nsUn8P_Ds/view?usp=sharing)
+- **Demo video:** [Watch demo walkthrough](https://drive.google.com/file/d/1GpxqDgM3zTojLQz3P_i8gv9cr3-NQWMb/view?usp=sharing)
 - **Demo logins** (password: `DueProof-Demo-2026`):
 
   | Email | Role |
